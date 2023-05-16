@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: Sedric Ai Speech Recognition - OpenAPI 3.0
+  description: This is an assignment for Sedric Ai
+  contact:
+    email: bartosz.s.ziolo@gmail.com
+servers:
+  - url: 'CHANGE_ME'
+tags:
+  - name: speech-recognition
+    description: Speech Recognition api
+paths:
+  /recgonize:
+    post:
+      tags:
+        - speech-recognition
+      summary: Based on the `mp3` or `wav` file and text supplied, queue a job to decide if supplied text is present in the audio
+      description: Based on the `mp3` or `wav` file and text supplied, queue a job to decide if supplied text is present in the audio
+      operationId: speechRecgonition
+      requestBody:
+        description: Based on the `mp3` or `wav` file and text supplied, queue a job to decide if supplied text is present in the audio
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SpeechReconigtionRequest"
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeechRecognitionResponse"
+        "405":
+          description: Invalid input
+
+components:
+  schemas:
+    SpeechReconigtionRequest:
+      type: object
+      properties:
+        audio_url:
+          type: string
+          example: "url/for/file.wav"
+        sentences:
+          type: array
+          items:
+            type: string
+            example: ["hi my name is joe", "can you hear me?"]
+
+    SpeechRecognitionResponseBody:
+      type: object
+      properties:
+        request_id:
+          type: string
+          example: "generated_request_id"
+        message:
+          type: string
+          example: "Your request was accepted successfully"
+
+    SpeechRecognitionResponse:
+      type: object
+      properties:
+        body:
+          $ref: "#/components/schemas/SpeechRecognitionResponseBody"
