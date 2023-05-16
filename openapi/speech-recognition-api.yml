@@ -48,6 +48,9 @@ components:
           items:
             type: string
             example: ["hi my name is joe", "can you hear me?"]
+      required:
+        - audio_url
+        - sentences
 
     SpeechRecognitionResponseBody:
       type: object
@@ -58,9 +61,14 @@ components:
         message:
           type: string
           example: "Your request was accepted successfully"
+      required:
+        - request_id
+        - message
 
     SpeechRecognitionResponse:
       type: object
       properties:
         body:
           $ref: "#/components/schemas/SpeechRecognitionResponseBody"
+      required:
+        - body
