@@ -20,6 +20,14 @@ Resources:
                   - logs:PutLogEvents
                 Resource: "*"
 
+  RecognizeFunctionInvokePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt RecognizeFunction.Arn
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SedricAiApiGateway}/*"
+
   RecognizeFunction:
     Type: AWS::Lambda::Function
     Properties:
