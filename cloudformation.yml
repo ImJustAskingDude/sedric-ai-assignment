@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  RecognizeFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
+
+  RecognizeFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: src/handlers/recognize.handle
+      Role: !GetAtt RecognizeFunctionExecutionRole.Arn
+      Runtime: python3.10
+      Code:
+        S3Bucket: sedric-ai-stack-app-artifact
+        S3Key: src.zip
+
+  SedricAiApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: SedricAiApiGateway
+
+  SedricAiApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref SedricAiApiGateway
+      ParentId: !GetAtt SedricAiApiGateway.RootResourceId
+      PathPart: recognize
+
+  SedricAiApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref SedricAiApiGateway
+      ResourceId: !Ref SedricAiApiGatewayResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations"
+          - LambdaFunctionArn: !GetAtt RecognizeFunction.Arn
+          
+Outputs:
+  ApiGatewayEndpoint:
+    Value: !Sub "https://${SedricAiApiGateway}.execute-api.${AWS::Region}.amazonaws.com"
+    Description: Endpoint URL of the API Gateway
