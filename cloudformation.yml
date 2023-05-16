@@ -19,6 +19,11 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: "*"
+              - Effect: Allow
+                Action:
+                  - transcribe:StartTranscriptionJob
+                Resource: "*"
+
 
   RecognizeFunctionInvokePermission:
     Type: "AWS::Lambda::Permission"
