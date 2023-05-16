@@ -4,6 +4,7 @@ info:
   description: This is an assignment for Sedric Ai
   contact:
     email: bartosz.s.ziolo@gmail.com
+  version: 0.0.1
 servers:
   - url: 'CHANGE_ME'
 tags:
