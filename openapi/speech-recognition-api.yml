@@ -6,10 +6,12 @@ info:
     email: bartosz.s.ziolo@gmail.com
   version: 0.0.1
 servers:
-  - url: 'CHANGE_ME'
+  - url: 'https://yh19m3kdn9.execute-api.eu-west-3.amazonaws.com/'
 tags:
   - name: speech-recognition
     description: Speech Recognition api
+  - name: speech-recognition-audio
+    description: Speech Recognition api file upload
 paths:
   /recgonize:
     post:
@@ -34,6 +36,36 @@ paths:
                 $ref: "#/components/schemas/SpeechRecognitionResponse"
         "405":
           description: Invalid input
+
+  /audio_upload:
+    post:
+      tags:
+        - speech-recognition-audio
+      summary: Upload a file for speech recgonition
+      description: Upload a file for speech recgonition
+      operationId: speechRecgonitionAudioUpload
+      requestBody:
+        description: Upload a file for speech recgonition
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio_file:
+                  type: string
+                  format: binary
+              required:
+                - audio_file
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeechRecognitionResponse"
+        "405":
+          description: Invalid input
+
 
 components:
   schemas:
