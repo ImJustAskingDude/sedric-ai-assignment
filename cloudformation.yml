@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
 Resources:
   RecognizeFunctionExecutionRole:
     Type: AWS::IAM::Role
@@ -24,6 +25,25 @@ Resources:
                   - transcribe:StartTranscriptionJob
                 Resource: "*"
 
+  RecognizeAudioFileUploadFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
 
   RecognizeFunctionInvokePermission:
     Type: "AWS::Lambda::Permission"
@@ -33,11 +53,29 @@ Resources:
       Principal: "apigateway.amazonaws.com"
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SedricAiApiGateway}/*"
 
+  RecognizeAudioFileUploadFunctionInvokePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt RecognizeAudioFileUploadFunction.Arn
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SedricAiApiGateway}/*"
+
   RecognizeFunction:
     Type: AWS::Lambda::Function
     Properties:
-      Handler: src/handlers/recognize.handle
+      Handler: src/handlers/aws_lambda/recognize.handle
       Role: !GetAtt RecognizeFunctionExecutionRole.Arn
+      Runtime: python3.10
+      Code:
+        S3Bucket: sedric-ai-stack-app-artifact
+        S3Key: src.zip
+
+  RecognizeAudioFileUploadFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: src/handlers/aws_lambda/audio_upload.handle
+      Role: !GetAtt RecognizeAudioFileUploadFunctionExecutionRole.Arn
       Runtime: python3.10
       Code:
         S3Bucket: sedric-ai-stack-app-artifact
@@ -48,18 +86,25 @@ Resources:
     Properties:
       Name: SedricAiApiGateway
 
-  SedricAiApiGatewayResource:
+  SedricAiApiRecognizeGatewayResource:
     Type: AWS::ApiGateway::Resource
     Properties:
       RestApiId: !Ref SedricAiApiGateway
       ParentId: !GetAtt SedricAiApiGateway.RootResourceId
       PathPart: recognize
 
-  SedricAiApiGatewayMethod:
+  SedricAiApiRecognizeAudioUploadGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref SedricAiApiGateway
+      ParentId: !GetAtt SedricAiApiGateway.RootResourceId
+      PathPart: audio_upload
+
+  SedricAiApiRecognizeGatewayMethod:
     Type: AWS::ApiGateway::Method
     Properties:
       RestApiId: !Ref SedricAiApiGateway
-      ResourceId: !Ref SedricAiApiGatewayResource
+      ResourceId: !Ref SedricAiApiRecognizeGatewayResource
       HttpMethod: POST
       AuthorizationType: NONE
       Integration:
@@ -68,8 +113,36 @@ Resources:
         Uri: !Sub
           - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations"
           - LambdaFunctionArn: !GetAtt RecognizeFunction.Arn
-          
+
+  SedricAiApiRecognizeAudioUploadGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref SedricAiApiGateway
+      ResourceId: !Ref SedricAiApiRecognizeAudioUploadGatewayResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations"
+          - LambdaFunctionArn: !GetAtt RecognizeAudioFileUploadFunction.Arn
+
+  SedricAiApiRecognizeGatewayMethodDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn: SedricAiApiRecognizeGatewayMethod
+    Properties:
+      RestApiId: !Ref SedricAiApiGateway
+      StageName: prod
+
+  SedricAiApiRecognizeAudioUploadGatewayMethodDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn: SedricAiApiRecognizeAudioUploadGatewayMethod
+    Properties:
+      RestApiId: !Ref SedricAiApiGateway
+      StageName: prod
+
 Outputs:
   ApiGatewayEndpoint:
-    Value: !Sub "https://${SedricAiApiGateway}.execute-api.${AWS::Region}.amazonaws.com"
+    Value: !Sub "https://${SedricAiApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/"
     Description: Endpoint URL of the API Gateway
