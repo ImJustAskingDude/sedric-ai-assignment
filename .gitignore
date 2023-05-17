@@ -1,1 +1,4 @@
 /env
+*.pyc
+new-cloudformation.yml
+src.zip
