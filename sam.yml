@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Resources:
+  RecognizeFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handlers/aws_lambda/recognize.handle
+      Runtime: python3.10
+      CodeUri: ./src
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - transcribe:StartTranscriptionJob
+              Resource: "*"
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /recognize
+            Method: POST
+            RestApiId: !Ref SedricAiApiGateway
+
+  RecognizeAudioFileUploadFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: handlers/aws_lambda/audio_upload.handle
+      Runtime: python3.10
+      CodeUri: ./src
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /audio_upload
+            Method: POST
+            RestApiId: !Ref SedricAiApiGateway
+
+  SedricAiApiGateway:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      Name: SedricAiApiGateway
+      StageName: prod
+
+Outputs:
+  ApiGatewayEndpoint:
+    Value: !Sub "https://${SedricAiApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/"
+    Description: Endpoint URL of the API Gateway
