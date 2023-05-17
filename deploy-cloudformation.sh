@@ -1,7 +1,13 @@
 #!/bin/bash
 
-rm -rf src.zip
-zip -r src.zip src/
+rm -rf deployment/src
+cp -r src/ deployment/.
+pip install -t deployment/src/handlers/aws_lambda/. -r src/requirements.txt
+
+rm src.zip
+cd deployment
+zip -r ../src.zip src/
+cd ..
 
 # aws s3 mb s3://sedric-ai-stack-app-artifact --region eu-west-3
 aws s3 cp src.zip s3://sedric-ai-stack-app-artifact/src.zip
