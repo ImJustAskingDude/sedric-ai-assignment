@@ -1,9 +1,9 @@
 from typing import List
-from src.domain.models.language_code import LanguageCode
-from src.domain.models.media_format import MediaFormat
-from src.domain.models.s3_media_file_uri import S3MediaFileUri
-from src.domain.models.transcription import Transcription
-from src.utils.enum_values import get_enum_values
+from domain.models.language_code import LanguageCode
+from domain.models.media_format import MediaFormat
+from domain.models.s3_media_file_uri import S3MediaFileUri
+from domain.models.transcription import Transcription
+from utils.enum_values import get_enum_values
 
 
 class SedricTranscription(Transcription):

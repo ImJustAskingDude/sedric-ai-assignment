@@ -1,9 +1,9 @@
 from typing import List
 
-from src.domain.models.language_code import LanguageCode
-from src.domain.models.media_file_uri import MediaFileUri
-from src.domain.models.media_format import MediaFormat
-from src.utils.enum_values import get_enum_values
+from domain.models.language_code import LanguageCode
+from domain.models.media_file_uri import MediaFileUri
+from domain.models.media_format import MediaFormat
+from utils.enum_values import get_enum_values
 
 
 class Transcription:

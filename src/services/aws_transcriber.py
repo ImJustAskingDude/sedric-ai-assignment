@@ -1,7 +1,7 @@
 import boto3
-from src.domain.models.transcription import Transcription
+from domain.models.transcription import Transcription
 
-from src.services.interfaces.transcriber import Transcriber
+from services.interfaces.transcriber import Transcriber
 
 
 class AwsTranscriber(Transcriber):

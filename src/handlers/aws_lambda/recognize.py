@@ -1,12 +1,12 @@
 import jsons
 
-from src.data_transfer.aws_event import AwsEvent
-from src.data_transfer.recognize_request import RecognizeRequest
-from src.data_transfer.recognize_response import RecognizeResponse
-from src.data_transfer.recognize_response_body import RecognizeResponseBody
-from src.domain.models.s3_media_file_uri import S3MediaFileUri
-from src.domain.models.sedric_transcription import SedricTranscription
-from src.services.aws_transcriber import AwsTranscriber
+from data_transfer.aws_event import AwsEvent
+from data_transfer.recognize_request import RecognizeRequest
+from data_transfer.recognize_response import RecognizeResponse
+from data_transfer.recognize_response_body import RecognizeResponseBody
+from domain.models.s3_media_file_uri import S3MediaFileUri
+from domain.models.sedric_transcription import SedricTranscription
+from services.aws_transcriber import AwsTranscriber
 
 
 def handle(event: dict, context):

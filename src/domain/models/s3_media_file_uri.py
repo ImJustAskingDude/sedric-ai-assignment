@@ -1,5 +1,5 @@
 from os import path
-from src.domain.models.media_file_uri import MediaFileUri
+from domain.models.media_file_uri import MediaFileUri
 
 
 class S3MediaFileUri(MediaFileUri):
