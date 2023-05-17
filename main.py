@@ -1,4 +1,4 @@
-from src.handlers.recognize import handle
+from handlers.aws_lambda.recognize import handle
 
 
 e = {
