@@ -154,6 +154,8 @@ Resources:
             Topic: !Ref RecognizeCompletionTopic
       Policies:
         - AWSLambdaBasicExecutionRole
+        - S3ReadPolicy:
+            BucketName: sedric-transcription-results
         - SNSPublishMessagePolicy:
             TopicName: !Ref RecognizeCompletionTopic
         - DynamoDBCrudPolicy:
