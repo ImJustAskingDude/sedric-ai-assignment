@@ -1,5 +1,5 @@
 import dataclasses
-from datetime import datetime
+from datetime import datetime, timezone
 import jsons
 import boto3
 
@@ -73,7 +73,7 @@ def handle(event: dict, context):
     item = AwsDynamoDbRecognizeRequest(
         requestId=request_id,
         audioFileUrl=s3_media_file_uri.get_file_name(),
-        requestTime=datetime.now().isoformat(),
+        requestTime=datetime.now(tz=timezone.UTC).isoformat(),
         sentences=request.sentences,
     )
 
