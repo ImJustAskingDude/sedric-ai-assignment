@@ -73,7 +73,7 @@ def handle(event: dict, context):
     item = AwsDynamoDbRecognizeRequest(
         requestId=request_id,
         audioFileUrl=s3_media_file_uri.get_file_name(),
-        requestTime=datetime.now(tz=timezone.UTC).isoformat(),
+        requestTime=datetime.now(tz=timezone.utc).isoformat(),
         sentences=request.sentences,
     )
 
