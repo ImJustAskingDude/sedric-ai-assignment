@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
 Resources:
   SedricTranscriptionRequestsTable:
-    Type: 'AWS::DynamoDB::Table'
+    Type: "AWS::DynamoDB::Table"
     Properties:
       TableName: sedric-transcription-requests
       AttributeDefinitions:
@@ -16,7 +16,7 @@ Resources:
         WriteCapacityUnits: 5
 
   SedricTranscriptionResultsTable:
-    Type: 'AWS::DynamoDB::Table'
+    Type: "AWS::DynamoDB::Table"
     Properties:
       TableName: sedric-transcription-results
       AttributeDefinitions:
@@ -77,7 +77,7 @@ Resources:
               Service: transcribe.amazonaws.com
             Action: sts:AssumeRole
       Path: "/"
-  
+
   RecognizeTranscriptionResultsBucketAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -114,15 +114,15 @@ Resources:
       PolicyDocument:
         Statement:
           - Action:
-              - 's3:GetObject'
-              - 's3:ListBucket'
-              - 's3:PutObject'
-            Effect: 'Allow'
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:PutObject"
+            Effect: "Allow"
             Resource:
-              - !Sub 'arn:aws:s3:::${RecognizeTranscriptionResultsBucket}'
-              - !Sub 'arn:aws:s3:::${RecognizeTranscriptionResultsBucket}/*'
+              - !Sub "arn:aws:s3:::${RecognizeTranscriptionResultsBucket}"
+              - !Sub "arn:aws:s3:::${RecognizeTranscriptionResultsBucket}/*"
             Principal:
-              Service: 'transcribe.amazonaws.com'
+              Service: "transcribe.amazonaws.com"
 
   RecognizeCompletionTopicPolicy:
     Type: AWS::SNS::TopicPolicy
@@ -139,7 +139,7 @@ Resources:
             Resource: !Ref RecognizeCompletionTopic
             Condition:
               ArnLike:
-                aws:SourceArn: !Sub 'arn:aws:s3:::${RecognizeTranscriptionResultsBucket}'
+                aws:SourceArn: !Sub "arn:aws:s3:::${RecognizeTranscriptionResultsBucket}"
 
   RecognizeCompleteListener:
     Type: AWS::Serverless::Function
@@ -153,18 +153,18 @@ Resources:
           Properties:
             Topic: !Ref RecognizeCompletionTopic
       Policies:
-      - AWSLambdaBasicExecutionRole
-      - SNSPublishMessagePolicy:
-          TopicName: !Ref RecognizeCompletionTopic
-      - DynamoDBCrudPolicy:
+        - AWSLambdaBasicExecutionRole
+        - SNSPublishMessagePolicy:
+            TopicName: !Ref RecognizeCompletionTopic
+        - DynamoDBCrudPolicy:
             TableName: sedric-transcription-requests
-      - DynamoDBCrudPolicy:
+        - DynamoDBCrudPolicy:
             TableName: sedric-transcription-results
-      - Statement:
-          - Effect: Allow
-            Action:
-              - dynamodb:PutItem
-            Resource: !GetAtt RecognitionResultsTable.Arn
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt RecognitionResultsTable.Arn
 
   RecognitionResultsTable:
     Type: AWS::DynamoDB::Table
