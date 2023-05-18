@@ -6,7 +6,7 @@ from data_transfer.recognize_result_sentence import RecognitionResultSentence
 
 @dataclass(frozen=True)
 class RecognitionResult:
-    id: str
+    result_id: str
     request_id: str
     audio_url: str
     transcription_url: Optional[str]
