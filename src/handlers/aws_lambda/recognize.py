@@ -17,7 +17,7 @@ def handle(event: dict, context):
     aws_event = jsons.load(json_obj=event, cls=AwsEvent)
     aws_event_body = aws_event.body
 
-    if aws_event_body == None or aws_event_body.replace(' ', '') == '':
+    if aws_event_body == None or aws_event_body.replace(" ", "") == "":
         return {
             "isBase64Encoded": False,
             "statusCode": 400,
