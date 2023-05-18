@@ -6,9 +6,10 @@ from data_transfer.aws_event import AwsEvent
 from data_transfer.recognize_request import RecognizeRequest
 from data_transfer.recognize_response import RecognizeResponse
 from data_transfer.recognize_response_body import RecognizeResponseBody
+from data_transfer.transcription_request import TranscriptionRequest
 from domain.models.s3_media_file_uri import S3MediaFileUri
 from domain.models.sedric_transcription import SedricTranscription
-from services.aws_transcriber import AwsTranscriber
+from services.sedric_aws_transcriber import SedricAwsTranscriber
 
 
 def handle(event: dict, context):
@@ -39,9 +40,13 @@ def handle(event: dict, context):
         job_name=str(request_id), s3_media_file_uri=s3_media_file_uri
     )
 
-    transcription_service = AwsTranscriber()
-    transcription_response = transcription_service.transcribe(
+    transcription_request = TranscriptionRequest.from_transcription(
         transcription=transcription
+    )
+
+    transcription_service = SedricAwsTranscriber()
+    transcription_response = transcription_service.transcribe(
+        transcription_request=transcription_request
     )
 
     print(f"{transcription_response=}")
