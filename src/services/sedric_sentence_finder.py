@@ -4,7 +4,6 @@ from domain.models.sentence_key import SentenceKey
 from services.interfaces.sentence_finder import SentenceFinder
 
 SentenceType = str
-FindMethodResultType = Dict[SentenceType, List[SentenceKey]]
 
 
 class SedricSentenceFinder(SentenceFinder):
@@ -13,9 +12,9 @@ class SedricSentenceFinder(SentenceFinder):
 
     def find(
         self, transcription_text: str, sentences: List[str]
-    ) -> FindMethodResultType:
+    ) -> Dict[SentenceType, List[SentenceKey]]:
         sentences = set(sentences)
-        sentence_keys: FindMethodResultType = {}
+        sentence_keys: Dict[SentenceType, List[SentenceKey]] = {}
 
         for sentence in sentences:
             start_index = transcription_text.find(sentence)
