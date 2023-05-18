@@ -1,6 +1,34 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: "AWS::Serverless-2016-10-31"
 Resources:
+  SedricTranscriptionRequestsTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: sedric-transcription-requests
+      AttributeDefinitions:
+        - AttributeName: requestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: requestId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  SedricTranscriptionResultsTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: sedric-transcription-results
+      AttributeDefinitions:
+        - AttributeName: resultId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: resultId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   RecognizeFunction:
     Type: "AWS::Serverless::Function"
     Properties:
