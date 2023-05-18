@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 
 @dataclass(frozen=True)
@@ -19,5 +20,10 @@ class AwsSnsS3MessageS3Field:
 
 
 @dataclass(frozen=True)
-class AwsSnsS3Message:
+class AwsSnsS3MessageRecord:
     s3: AwsSnsS3MessageS3Field
+
+
+@dataclass(frozen=True)
+class AwsSnsS3Message:
+    Records: List[AwsSnsS3MessageRecord]
