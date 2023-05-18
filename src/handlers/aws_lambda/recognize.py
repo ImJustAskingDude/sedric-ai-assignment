@@ -1,5 +1,7 @@
 import jsons
 
+from uuid import uuid4
+
 from data_transfer.aws_event import AwsEvent
 from data_transfer.recognize_request import RecognizeRequest
 from data_transfer.recognize_response import RecognizeResponse
@@ -14,6 +16,14 @@ def handle(event: dict, context):
     aws_event = jsons.load(json_obj=event, cls=AwsEvent)
     aws_event_body = aws_event.body
 
+    if aws_event_body == None or aws_event_body.replace(' ', '') == '':
+        return {
+            "isBase64Encoded": False,
+            "statusCode": 400,
+            "headers": {"Content-Type": "application/json"},
+            "body": jsons.dumps("You have not provided the body for the POST request."),
+        }
+
     request = jsons.loads(aws_event_body, RecognizeRequest)
     print(request)
 
@@ -23,8 +33,10 @@ def handle(event: dict, context):
         bucket_name=bucket_name, file_name="still-listening-gentleman.wav"
     )
 
+    request_id = str(uuid4())
+
     transcription = SedricTranscription(
-        job_name="sample_transcription_job", s3_media_file_uri=s3_media_file_uri
+        job_name=str(request_id), s3_media_file_uri=s3_media_file_uri
     )
 
     transcription_service = AwsTranscriber()
@@ -36,7 +48,7 @@ def handle(event: dict, context):
 
     response = RecognizeResponse(
         body=RecognizeResponseBody(
-            request_id="generated_request_id",
+            request_id=request_id,
             message="Your request was accepted successfully",
         )
     )
