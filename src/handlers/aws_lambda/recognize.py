@@ -9,6 +9,7 @@ from data_transfer.recognize_response_body import RecognizeResponseBody
 from data_transfer.transcription_request import TranscriptionRequest
 from domain.models.s3_media_file_uri import S3MediaFileUri
 from domain.models.sedric_transcription import SedricTranscription
+from services.aws_transcriber import AwsTranscriber
 from services.sedric_aws_transcriber import SedricAwsTranscriber
 
 
@@ -31,7 +32,7 @@ def handle(event: dict, context):
     bucket_name = "sedric-transcription-audio"
 
     s3_media_file_uri = S3MediaFileUri(
-        bucket_name=bucket_name, file_name="still-listening-gentleman.wav"
+        bucket_name=bucket_name, file_name=request.audio_url
     )
 
     request_id = str(uuid4())
@@ -44,8 +45,12 @@ def handle(event: dict, context):
         transcription=transcription
     )
 
-    transcription_service = SedricAwsTranscriber()
-    transcription_response = transcription_service.transcribe(
+    aws_transcription_service = AwsTranscriber()
+
+    sedric_transcription_service = SedricAwsTranscriber(
+        aws_transcriber=aws_transcription_service
+    )
+    transcription_response = sedric_transcription_service.transcribe(
         transcription_request=transcription_request
     )
 
