@@ -71,11 +71,9 @@ def handle(event, context):
     transcription_transcript = get_first(transcription_results.transcripts)
     transcription_text = transcription_transcript.transcript
 
-    key = {
-        'requestId': request_id
-    }
+    key = {"requestId": request_id}
 
-    request_item = requests_table.get_item(Key=key)['Item']
+    request_item = requests_table.get_item(Key=key)["Item"]
     print(request_item)
     recognize_request = jsons.load(request_item, AwsDynamoDbRecognizeRequest)
 
@@ -84,19 +82,31 @@ def handle(event, context):
         transcription_text=transcription_text, sentences=recognize_request.sentences
     )
 
-    recognize_result_sentences = [
+    recognize_result_sentences_found = [
         RecognitionResultSentence(
             plain_text=sentence,
-            was_present=len(sentence_keys) != 0,
-            start_word_index=sentence_key.get_start_index()
-            if len(sentence_keys) != 0
-            else None,
-            end_word_index=sentence_key.get_end_index()
-            if len(sentence_keys) != 0
-            else None,
+            was_present=True,
+            start_word_index=sentence_key.get_start_index(),
+            end_word_index=sentence_key.get_end_index(),
         )
         for sentence, sentence_keys in sentence_keys_per_sentence.items()
         for sentence_key in sentence_keys
+    ]
+
+    recognize_result_sentences_not_found = [
+        RecognitionResultSentence(
+            plain_text=sentence,
+            was_present=False,
+            start_word_index=None,
+            end_word_index=None,
+        )
+        for sentence, sentence_keys in sentence_keys_per_sentence.items()
+        if not sentence_keys
+    ]
+
+    recognize_result_sentences = [
+        *recognize_result_sentences_found,
+        *recognize_result_sentences_not_found,
     ]
 
     audio_url = recognize_request.audioFileUrl
