@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
-
-from domain.models.transcription import Transcription
+from data_transfer.transcription_request import TranscriptionRequest
 
 
 class Transcriber(ABC):
     @abstractmethod
-    def transcribe(self, transcription: Transcription, output_bucket_name: str, output_key: str):
+    def transcribe(self, transcription_request: TranscriptionRequest):
         ...
