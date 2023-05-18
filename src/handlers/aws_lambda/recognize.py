@@ -1,6 +1,10 @@
+import dataclasses
+from datetime import datetime
 import jsons
+import boto3
 
 from uuid import uuid4
+from data_transfer.aws_dynamodb_recognize_request import AwsDynamoDbRecognizeRequest
 
 from data_transfer.aws_event import AwsEvent
 from data_transfer.recognize_request import RecognizeRequest
@@ -12,9 +16,13 @@ from domain.models.sedric_transcription import SedricTranscription
 from services.aws_transcriber import AwsTranscriber
 from services.sedric_aws_transcriber import SedricAwsTranscriber
 
+dynamodb = boto3.resource("dynamodb")
+
+requests_table_name = "sedric-transcription-requests"
+requests_table = dynamodb.Table(requests_table_name)
+
 
 def handle(event: dict, context):
-    print(event)
     aws_event = jsons.load(json_obj=event, cls=AwsEvent)
     aws_event_body = aws_event.body
 
@@ -27,7 +35,6 @@ def handle(event: dict, context):
         }
 
     request = jsons.loads(aws_event_body, RecognizeRequest)
-    print(request)
 
     bucket_name = "sedric-transcription-audio"
 
@@ -62,6 +69,16 @@ def handle(event: dict, context):
             message="Your request was accepted successfully",
         )
     )
+
+    item = AwsDynamoDbRecognizeRequest(
+        requestId=request_id,
+        audioFileUrl=s3_media_file_uri.get_file_name(),
+        requestTime=datetime.now().isoformat(),
+        sentences=request.sentences,
+    )
+
+    print(f"Putting {item=} in table {requests_table_name}")
+    requests_table.put_item(Item=dataclasses.asdict(item))
 
     return {
         "isBase64Encoded": False,
