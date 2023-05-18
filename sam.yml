@@ -40,6 +40,8 @@ Resources:
             BucketName: sedric-transcription-audio
         - S3WritePolicy:
             BucketName: sedric-transcription-results
+        - DynamoDBCrudPolicy:
+            TableName: sedric-transcription-requests
         - Statement:
             - Effect: Allow
               Action:
@@ -154,6 +156,10 @@ Resources:
       - AWSLambdaBasicExecutionRole
       - SNSPublishMessagePolicy:
           TopicName: !Ref RecognizeCompletionTopic
+      - DynamoDBCrudPolicy:
+            TableName: sedric-transcription-requests
+      - DynamoDBCrudPolicy:
+            TableName: sedric-transcription-results
       - Statement:
           - Effect: Allow
             Action:
