@@ -48,11 +48,13 @@ def handle(event, context):
     print(event)
 
     aws_event = jsons.load(event, AwsEventSns)
-    aws_event_message = aws_event.Records[0].Message
+    aws_event_first_record = get_first(aws_event.Records)
+    aws_event_message = aws_event_first_record.Sns.Message
 
     aws_s3_message = jsons.loads(aws_event_message, AwsSnsS3Message)
 
-    recognize_result_file_name = aws_s3_message.s3.object.key
+    recognize_first_result = get_first(aws_s3_message.Records)
+    recognize_result_file_name = recognize_first_result.s3.object.key
 
     if ".write_access_check_file.temp" in recognize_result_file_name:
         return {
@@ -69,7 +71,12 @@ def handle(event, context):
     transcription_transcript = get_first(transcription_results.transcripts)
     transcription_text = transcription_transcript.transcript
 
-    request_item = requests_table.get_item(Key=request_id)
+    key = {
+        'requestId': request_id
+    }
+
+    request_item = requests_table.get_item(Key=key)['Item']
+    print(request_item)
     recognize_request = jsons.load(request_item, AwsDynamoDbRecognizeRequest)
 
     sentence_finder = SedricSentenceFinder()
@@ -95,13 +102,16 @@ def handle(event, context):
     audio_url = recognize_request.audioFileUrl
 
     recognize_results = RecognitionResult(
-        result_id=str(uuid4()),
-        request_id=request_id,
-        audio_url=audio_url,
+        resultId=str(uuid4()),
+        requestId=request_id,
+        audioUrl=audio_url,
+        transcriptionUrl=None,
         sentences=recognize_result_sentences,
     )
 
     item = dataclasses.asdict(recognize_results)
+
+    print(f"Putting {item=} in table {results_table_name}")
     results_table.put_item(Item=item)
 
     return {
