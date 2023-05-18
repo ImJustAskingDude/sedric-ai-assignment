@@ -14,4 +14,4 @@ class AwsEventSnsRecord:
 
 @dataclass(frozen=True)
 class AwsEventSns:
-    Records: List[AwsEventSnsRecordSnsField]
+    Records: List[AwsEventSnsRecord]
