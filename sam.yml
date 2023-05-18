@@ -1,13 +1,17 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: 'AWS::Serverless-2016-10-31'
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
 Resources:
   RecognizeFunction:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       Handler: handlers/aws_lambda/recognize.handle
       Runtime: python3.10
       CodeUri: ./src
       Policies:
+        - S3ReadPolicy:
+            BucketName: sedric-transcription-audio
+        - S3WritePolicy:
+            BucketName: sedric-transcription-results
         - Statement:
             - Effect: Allow
               Action:
@@ -27,8 +31,123 @@ Resources:
             Method: POST
             RestApiId: !Ref SedricAiApiGateway
 
+  RecognizeCompletionTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: RecognizeCompletionTopic
+
+  RecognizeTranscriptionResultsBucketAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: transcribe.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+  
+  RecognizeTranscriptionResultsBucketAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: RecognizeTranscriptionResultsBucketAccessPolicy
+      Roles:
+        - !Ref RecognizeTranscriptionResultsBucketAccessRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource:
+              - arn:aws:s3:::sedric-transcription-results/*
+          - Effect: Allow
+            Action:
+              - s3:ReadObject
+            Resource:
+              - arn:aws:s3:::sedric-transcription-audio/*
+
+  RecognizeTranscriptionResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: sedric-transcription-results
+      NotificationConfiguration:
+        TopicConfigurations:
+          - Event: s3:ObjectCreated:*
+            Topic: !Ref RecognizeCompletionTopic
+
+  RecognizeTranscriptionResultsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RecognizeTranscriptionResultsBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:GetObject'
+              - 's3:ListBucket'
+              - 's3:PutObject'
+            Effect: 'Allow'
+            Resource:
+              - !Sub 'arn:aws:s3:::${RecognizeTranscriptionResultsBucket}'
+              - !Sub 'arn:aws:s3:::${RecognizeTranscriptionResultsBucket}/*'
+            Principal:
+              Service: 'transcribe.amazonaws.com'
+
+  RecognizeCompletionTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref RecognizeCompletionTopic
+      PolicyDocument:
+        Statement:
+          - Sid: AllowS3BucketToPublishEvents
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref RecognizeCompletionTopic
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub 'arn:aws:s3:::${RecognizeTranscriptionResultsBucket}'
+
+  RecognizeCompleteListener:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers/aws_lambda/recognize_complete.handle
+      Runtime: python3.10
+      CodeUri: ./src
+      Events:
+        RecognizeComplete:
+          Type: SNS
+          Properties:
+            Topic: !Ref RecognizeCompletionTopic
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - SNSPublishMessagePolicy:
+          TopicName: !Ref RecognizeCompletionTopic
+      - Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource: !GetAtt RecognitionResultsTable.Arn
+
+  RecognitionResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: RecognitionResults
+      AttributeDefinitions:
+        - AttributeName: job_name
+          AttributeType: S
+      KeySchema:
+        - AttributeName: job_name
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
   RecognizeAudioFileUploadFunction:
-    Type: 'AWS::Serverless::Function'
+    Type: "AWS::Serverless::Function"
     Properties:
       Handler: handlers/aws_lambda/audio_upload.handle
       Runtime: python3.10
@@ -44,7 +163,7 @@ Resources:
             RestApiId: !Ref SedricAiApiGateway
 
   SedricAiApiGateway:
-    Type: 'AWS::Serverless::Api'
+    Type: "AWS::Serverless::Api"
     Properties:
       Name: SedricAiApiGateway
       StageName: prod
